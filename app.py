@@ -13,7 +13,7 @@ app.debug=True
 app.secret_key="key123"
 toolbar = DebugToolbarExtension(app)
 
-DATABASE = '/media/dominic/data/dominic/db/DBWebApp/Gruppe2/Oper.db'
+DATABASE = 'Oper.db'
 
 # Hilfestellung bzw. Quelle der Funktionen: http://flask.pocoo.org/docs/1.0/patterns/sqlite3/
 # Alternativ gehts so https://www.tutorialspoint.com/flask/flask_sqlite.htm aber wills lieber mal auf diesem Web probieren
