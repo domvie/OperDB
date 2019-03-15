@@ -1,7 +1,7 @@
 import os, sys, sqlite3
 from flask import Flask, render_template, flash, url_for, session, request, logging, g, redirect
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField
-from passlib.hash import sha256_crypt
+from passlib.hash import sha256_crypt, pbkdf2_sha256
 from functools import wraps
 from flask_debugtoolbar import DebugToolbarExtension
 
@@ -23,7 +23,16 @@ def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
+    
+    #Ergebnisse zu einem dict konvertieren
+    def make_dicts(cursor, row):
+        return dict((cursor.description[idx][0], value)
+            for idx, value in enumerate(row))
+
+    db.row_factory = make_dicts
+
     return db
+
 
 #Funktion um eine query durchzuführen, returned Ergebnisliste
 def query_db(query, args=(), one=False):
@@ -31,6 +40,15 @@ def query_db(query, args=(), one=False):
     rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
+
+def insert_db(query, args=()):
+
+    with sqlite3.connect(DATABASE) as con:
+        cur = con.cursor()
+        cur.execute(query,args)
+        
+    con.commit()
+    con.close()
 
 # Initialisiert die DB mit dem Schema
 def init_db():
@@ -53,10 +71,7 @@ def CheckIfDbExists():
         init_db()
     else:
         print("Using existing database: " + DATABASE)
-        
-def make_dicts(cursor, row):
-    return dict((cursor.description[idx][0], value)
-                for idx, value in enumerate(row))
+    
 
 CheckIfDbExists()
 
@@ -91,18 +106,18 @@ class RegisterForm(Form):
 def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
-        username = form.username.data
-        password = sha256_crypt.encrypt(str(form.password.data))
+        username = request.form['username']
+        password = pbkdf2_sha256.hash(request.form['password'])
 
-        ''' Hier gibt es irgendwie noch Probleme. Mit dem aktuellen kommt zumindest keine Fehlermeldung
-        aber irgendwie schreibt er keine Daten in die Tabelle users (ist nur zum Testen, gehört nicht zum Oper Schema)'''
-        #query = 'INSERT INTO users(username, password) VALUES("{}","{}")'.format(username,password)
-        #query = 'INSERT INTO users(username, password) VALUES("?","?")'
-        query = 'INSERT INTO users(username, password) VALUES(?,?)'
-        query_db(query, (username, password))
+        query = 'INSERT INTO users (username, password) VALUES(?,?);'
 
-        flash('You are now registered and can log in', 'success')
-        return redirect(url_for('login'))
+        try:
+            insert_db(query, (username, password))
+            flash('You are now registered and can log in', 'success')
+            return redirect(url_for('login'))
+        except: 
+            flash('Error bei SQL Query','error')
+            return redirect(url_for('register'))
     return render_template('register.html', form=form)
 
 
@@ -114,26 +129,18 @@ def login():
         username = request.form['username']
         password_candidate = request.form['password']
 
-        # Create cursor
-        #cur = db.cursor()
-        # Get user by username
-        #result = cur.execute("SELECT * FROM users WHERE username = %s", [username])
-        
-        result = query_db("SELECT * FROM users WHERE username = ?", username)
-    #FUNKTIONIERT NOCH NICHT
+        result = query_db("SELECT * FROM users WHERE username = ?", (username,), one=True)
         if result:
             # Get stored hash
-            #data = cur.fetchone()
             password = result['password']
-            flash(result)
             # Compare Passwords
-            if sha256_crypt.verify(password_candidate, password):
+            if pbkdf2_sha256.verify(password_candidate, password):
                 # Passed
                 session['logged_in'] = True
                 session['username'] = username
 
                 flash('You are now logged in', 'success')
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('index'))
             else:
                 error = 'Invalid login'
                 return render_template('login.html', error=error)
@@ -162,11 +169,6 @@ def logout():
     flash('You are now logged out', 'success')
     return redirect(url_for('login'))
 
-
-# apply the blueprints to the app
-#import auth, blog
-#app.register_blueprint(auth.bp)
-#app.register_blueprint(blog.bp)
 
 if __name__ == "__main__":
     app.secret_key="key123"

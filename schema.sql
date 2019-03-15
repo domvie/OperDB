@@ -62,7 +62,7 @@ CREATE TABLE Oper_gehört_Rollenbuchtypen
     ISBN VARCHAR2(20)
         CONSTRAINT nn_ISBN NOT NULL,
     Komponist VARCHAR2(50),
-    CONSTRAINT pk_Oper_gehört_Rollenbuchtypen PRIMARY KEY (Name)
+    CONSTRAINT pk_Oper_gehört_Roll PRIMARY KEY (Name)
 );
 
 CREATE TABLE Aufführung_von
@@ -73,7 +73,7 @@ CREATE TABLE Aufführung_von
     Budget NUMBER(7),
     Name VARCHAR2(30),
     CONSTRAINT pk_Aufführung_von PRIMARY KEY (Datum, Uhrzeit),
-    CONSTRAINT fk_Aufführung_von_Oper_gehört_Rollenbuchtypen FOREIGN KEY (Name) REFERENCES Oper_gehört_Rollenbuchtypen (Name)
+    CONSTRAINT fk_Aufführung_von_Oper_gR FOREIGN KEY (Name) REFERENCES Oper_gehört_Rollenbuchtypen (Name)
 );
 
 CREATE TABLE reservieren
@@ -101,18 +101,18 @@ CREATE TABLE Angestellte_hat_Gehaltskonto
 (
     SozNr NUMBER(10),
     Angestelltennummer VARCHAR2(20)
-        CONSTRAINT nn_Angestellte_hat_Gehaltskonto_Angestelltennummer NOT NULL
-        CONSTRAINT unq_Angestellte_hat_Gehaltskonto_Angestellennummer UNIQUE,
+        CONSTRAINT nn_AN_hat_Gkonto_Anr NOT NULL
+        CONSTRAINT unq_AN_hat_Gkonto_Anr UNIQUE,
     Kontonummer VARCHAR2(30)
-        CONSTRAINT nn_Angestellte_hat_Gehaltskonto_Kontonummer NOT NULL
-        CONSTRAINT unq_Angestellte_hat_Gehaltskonto_Kontonummer UNIQUE,
+        CONSTRAINT nn_AN_hat_Gkonto_Knr NOT NULL
+        CONSTRAINT unq_AN_hat_Gkonto_Knr UNIQUE,
     Kontostand NUMBER(15),
     BLZ VARCHAR2(10)
-        CONSTRAINT nn_Angestellte_hat_Gehaltskonto_BLZ NOT NULL
-        CONSTRAINT unq_Angestellte_hat_Gehaltskonto_BLZ UNIQUE,
-    CONSTRAINT pk_Angestellte_hat_Gehaltskonto PRIMARY KEY (SozNr),
-    CONSTRAINT fk_Angestellte_hat_Gehaltskonto_Person FOREIGN KEY (SozNr) REFERENCES Person (SozNr) ON DELETE CASCADE, 
-    CONSTRAINT fk_Angestellte_hat_Gehaltskonto_Bank FOREIGN KEY (BLZ) REFERENCES Bank (BLZ)
+        CONSTRAINT nn_AN_hat_Gkonto_BLZ NOT NULL
+        CONSTRAINT unq_AN_hat_Gkonto_BLZ UNIQUE,
+    CONSTRAINT pk_AN_hat_Gkonto PRIMARY KEY (SozNr),
+    CONSTRAINT fk_AN_hat_Gkonto_Person FOREIGN KEY (SozNr) REFERENCES Person (SozNr) ON DELETE CASCADE, 
+    CONSTRAINT fk_AN_hat_Gkonto_Bank FOREIGN KEY (BLZ) REFERENCES Bank (BLZ)
 );
 
 CREATE TABLE Sänger
@@ -123,7 +123,7 @@ CREATE TABLE Sänger
         CONSTRAINT unq_Sänger_Künstlername UNIQUE,
     Datum DATE,
     CONSTRAINT pk_Sänger PRIMARY KEY (SozNr),
-    CONSTRAINT fk_Sänger_Angestellte_hat_Gehaltskonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr) ON DELETE CASCADE
+    CONSTRAINT fk_Sänger_AN_hat_Gkonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr) ON DELETE CASCADE
 );
 
 CREATE TABLE singen
@@ -143,7 +143,7 @@ CREATE TABLE Besucher_bevorzugen
     Kundennummer NUMBER(10),
     CONSTRAINT pk_Besucher_bevorzugen PRIMARY KEY (Kundennummer),
     CONSTRAINT fk_Besucher FOREIGN KEY (SozNr) REFERENCES Besucher (SozNr) ON DELETE CASCADE,
-    CONSTRAINT fk_Besucher_bevorzugen_Sänger FOREIGN KEY (SozNr) REFERENCES Sänger (SozNr) ON DELETE CASCADE
+    CONSTRAINT fk_Besucher_bevorz_Sänger FOREIGN KEY (SozNr) REFERENCES Sänger (SozNr) ON DELETE CASCADE
 );
 
 CREATE TABLE Sprache
@@ -158,7 +158,7 @@ CREATE TABLE kann
     Name VARCHAR2(50), 
     Sprache VARCHAR2(20),
     CONSTRAINT pk_kann PRIMARY KEY (SozNr),
-    CONSTRAINT fk_kann_Oper_gehört_Rollenbuchtypen FOREIGN KEY (Name) REFERENCES Oper_gehört_Rollenbuchtypen (Name),
+    CONSTRAINT fk_kann_Oper_gehört_R FOREIGN KEY (Name) REFERENCES Oper_gehört_Rollenbuchtypen (Name),
     CONSTRAINT fk_kann_Sänger FOREIGN KEY (SozNr) REFERENCES Sänger (SozNr),
     CONSTRAINT fk_kann_Sprache FOREIGN KEY (Sprache) REFERENCES Sprache (Sprache)
 );
@@ -167,7 +167,7 @@ CREATE TABLE Requisiteur
 (
     SozNr NUMBER(10),
     CONSTRAINT pk_Requisiteur PRIMARY KEY (SozNr),
-    CONSTRAINT fk_Requisiteur_Angestellte_hat_Gehaltskonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto ON DELETE CASCADE
+    CONSTRAINT fk_Requisiteur_A_hat_Gkonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto ON DELETE CASCADE
 );
 
 CREATE TABLE Rollenbücher_haben
@@ -175,21 +175,21 @@ CREATE TABLE Rollenbücher_haben
     Inventarnr VARCHAR2(25),
     SozNr NUMBER(10),
     Name VARCHAR2(30)
-        CONSTRAINT nn_Rollenbücher_haben_Name NOT NULL,
+        CONSTRAINT nn_Rb_haben_Name NOT NULL,
     Komponist VARCHAR2(50),
-    CONSTRAINT pk_Rollenbücher_haben PRIMARY KEY (Inventarnr),
-    CONSTRAINT fk_Rollenbücher_haben_Oper_gehört_Rollenbuchtypen FOREIGN KEY (Name) REFERENCES Oper_gehört_Rollenbuchtypen (Name),
-    CONSTRAINT fk_Rollenbücher_haben_Angestellte_hat_Gehaltskonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr)
+    CONSTRAINT pk_Rb_haben PRIMARY KEY (Inventarnr),
+    CONSTRAINT fk_Rb_Oper_gehört_R FOREIGN KEY (Name) REFERENCES Oper_gehört_Rollenbuchtypen (Name),
+    CONSTRAINT fk_Rb_A_hat_Gkonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr)
 );
 
 CREATE TABLE Rollenbücher_entlehnen
 (
     SozNr NUMBER(10),
     Inventarnr VARCHAR2(25)
-        CONSTRAINT unq_Rollenbücher_entlehnen_Inventarnr UNIQUE,
-    CONSTRAINT pk_Rollenbücher_entlehnen PRIMARY KEY (SozNr),
-    CONSTRAINT fk_Rollenbücher_entlehnen_Rollenbücher_haben FOREIGN KEY (Inventarnr) REFERENCES Rollenbücher_haben,
-    CONSTRAINT fk_Rollenbücher_entlehnen_Angestellte_hat_Gehaltskonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr)
+        CONSTRAINT unq_Rb_entl_Inventarnr UNIQUE,
+    CONSTRAINT pk_Rb_entlehnen PRIMARY KEY (SozNr),
+    CONSTRAINT fk_Rb_entl_Rb_haben FOREIGN KEY (Inventarnr) REFERENCES Rollenbücher_haben,
+    CONSTRAINT fk_Rb_entl_A_hat_Gkonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr)
 );
 
 CREATE TABLE vertragen_sich_nicht
@@ -197,6 +197,6 @@ CREATE TABLE vertragen_sich_nicht
     Vorher NUMBER(10),
     Nachher NUMBER(10),
     CONSTRAINT pk_vertragen_sich_nicht PRIMARY KEY (Vorher, Nachher),
-    CONSTRAINT fk_vertragen_sich_nicht__vorher_Sänger FOREIGN KEY (Vorher) REFERENCES Sänger (SozNr),
-    CONSTRAINT fk_vertragen_sich_nicht_nachher_Sänger FOREIGN KEY (Nachher) REFERENCES Sänger (SozNr)
+    CONSTRAINT fk_vorher_Sänger FOREIGN KEY (Vorher) REFERENCES Sänger (SozNr),
+    CONSTRAINT fk_nachher_Sänger FOREIGN KEY (Nachher) REFERENCES Sänger (SozNr)
 );
