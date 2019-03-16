@@ -1,6 +1,6 @@
 import os, sys, sqlite3
 from flask import Flask, render_template, flash, url_for, session, request, logging, g, redirect
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField
+from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField, DateTimeField, DateField, TimeField
 from passlib.hash import sha256_crypt, pbkdf2_sha256
 from functools import wraps
 #from flask_debugtoolbar import DebugToolbarExtension
@@ -23,14 +23,11 @@ def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
-    
     #Ergebnisse zu einem dict konvertieren
     def make_dicts(cursor, row):
         return dict((cursor.description[idx][0], value)
             for idx, value in enumerate(row))
-
     db.row_factory = make_dicts
-
     return db
 
 
@@ -42,11 +39,9 @@ def query_db(query, args=(), one=False):
     return (rv[0] if rv else None) if one else rv
 
 def insert_db(query, args=()):
-
     with sqlite3.connect(DATABASE) as con:
         cur = con.cursor()
         cur.execute(query,args)
-        
     con.commit()
     con.close()
 
@@ -72,7 +67,6 @@ def close_connection(exception):
         db.close()
 
 # Überprüft ob DB bereits besteht und initialisiert die DB wenn nicht
-
 def CheckIfDbExists():
     if not os.path.isfile(DATABASE):
         print("Database does not exist yet. Creating new Database: ", DATABASE)
@@ -81,32 +75,50 @@ def CheckIfDbExists():
         try:
             insert_dummies()
             print("Success")
-
         except:
             print("Error inserting dummies")
     else:
         print("Using existing database: " + DATABASE)
     
-
 CheckIfDbExists()
 
 @app.route('/')
 def index():
     return render_template('home.html')
 
-@app.route('/suche')
-def suche():
-    return render_template('suche.html')
+class SearchForm(Form):
+    name = StringField('Titel/Name der Aufführung', [validators.Length(min=0, max=30)])
+    datum = DateField('Datum (YYYY-MM-DD)')
+    dirigent = StringField('Dirigent', [validators.Length(min=0, max=30)])
+    saenger = StringField('Sänger', [validators.Length(min=0, max=30)])
 
-@app.route('/buchung')
-def buchung():
-    return render_template('buchung.html')
+@app.route('/suche', methods=['GET', 'POST'])
+def suche():
+    form = SearchForm(request.form)
+    if request.method == 'POST':
+        results = []
+        if request.form['name']:
+            name = request.form['name']
+            results += query_db("SELECT * FROM Aufführung_von WHERE Name LIKE ?", (name,))
+        elif request.method['dirigent']:
+            dirigent = request.form['dirigent']
+            results += query_db("SELECT * FROM Aufführung_von WHERE Dirigent LIKE ?", (dirigent,))
+        elif request.method['datum']:
+            datum = request.form['datum']
+            results += query_db("SELECT * FROM Aufführung_von WHERE Datum LIKE ?", (datum,))
+        elif request.method['saenger']:
+            saenger = request.form['saenger']
+            results += query_db("SELECT * FROM Sänger WHERE Künstlername LIKE ?", (saenger,))
+        return render_template("ergebnisse.html", results = results)
+    
+    return render_template("suche.html", form=form)
+
+
 
 @app.route('/bevorstehend')
 def bevorstehend():
 
-    auffuehrungen = query_db("SELECT * FROM users")
-
+    auffuehrungen = query_db("SELECT * FROM Aufführung_von")
     if auffuehrungen:
         return render_template('bevorstehend.html', auffuehrungen = auffuehrungen)
     else:
@@ -122,6 +134,7 @@ class RegisterForm(Form):
     ])
     confirm = PasswordField('Confirm Password')
 
+
 # User Register
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -131,7 +144,6 @@ def register():
         password = pbkdf2_sha256.hash(request.form['password'])
 
         query = 'INSERT INTO users (username, password) VALUES(?,?);'
-
         try:
             insert_db(query, (username, password))
             flash('You are now registered and can log in', 'success')
@@ -181,6 +193,42 @@ def is_logged_in(f):
             flash('Unauthorized, Please login', 'danger')
             return redirect(url_for('login'))
     return wrap
+
+
+# Buchung/reservieren Formular
+class ReservierungsFormular(Form):
+    name = StringField('Titel/Name der Aufführung', [validators.Length(min=1, max=30)])
+    datum = DateField('Datum (YYYY-MM-DD)')
+    uhrzeit = TimeField('Uhrzeit (HH:MM)')
+
+@app.route('/buchung', methods=['GET', 'POST'])
+@is_logged_in
+def buchung():
+    form = ReservierungsFormular(request.form)
+    if request.method == 'POST' and form.validate():
+        name = request.form['name']
+        datum = request.form['datum']
+        uhrzeit = request.form['uhrzeit']
+
+        try:
+            insert_db("INSERT INTO Aufführung_von(Datum, Uhrzeit, Name) VALUES (?,?,?)", (datum, uhrzeit, name))
+            flash('Erfolgreich gebucht!')
+        except:
+            flash('Fehler bei der Buchung!')
+            return redirect(url_for('buchung'))
+    
+    return render_template('buchung.html', form=form)
+
+@app.route('/buchungen')
+@is_logged_in
+def buchungen():
+    buchungen = query_db("SELECT * FROM reservieren")
+
+    if buchungen:
+        return render_template('buchungen.html', buchungen=buchungen)
+    else:
+        msg = 'Sie haben keine Buchungen'
+        return render_template('buchungen.html', msg=msg)
 
 # Logout
 @app.route('/logout')

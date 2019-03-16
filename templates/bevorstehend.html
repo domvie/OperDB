@@ -4,7 +4,7 @@
   <h1>Bevorstehende Aufführungen</h1>
   <ul class="list-group">
     {% for auffuehrung in auffuehrungen %}
-      <li class="list-group-item"><a href="bevorstehend/{{auffuehrung.username}}">{{auffuehrung.username}}</a></li>
+      <li class="list-group-item"><a href="bevorstehend/{{auffuehrung.Name}}">{{auffuehrung.Name}}</a></li>
     {% endfor %}
   </ul>
 {% endblock %}
