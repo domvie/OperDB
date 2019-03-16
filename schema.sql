@@ -108,8 +108,7 @@ CREATE TABLE Angestellte_hat_Gehaltskonto
         CONSTRAINT unq_AN_hat_Gkonto_Knr UNIQUE,
     Kontostand NUMBER(15),
     BLZ VARCHAR2(10)
-        CONSTRAINT nn_AN_hat_Gkonto_BLZ NOT NULL
-        CONSTRAINT unq_AN_hat_Gkonto_BLZ UNIQUE,
+        CONSTRAINT nn_AN_hat_Gkonto_BLZ NOT NULL,
     CONSTRAINT pk_AN_hat_Gkonto PRIMARY KEY (SozNr),
     CONSTRAINT fk_AN_hat_Gkonto_Person FOREIGN KEY (SozNr) REFERENCES Person (SozNr) ON DELETE CASCADE, 
     CONSTRAINT fk_AN_hat_Gkonto_Bank FOREIGN KEY (BLZ) REFERENCES Bank (BLZ)

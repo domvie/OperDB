@@ -3,7 +3,7 @@ from flask import Flask, render_template, flash, url_for, session, request, logg
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField
 from passlib.hash import sha256_crypt, pbkdf2_sha256
 from functools import wraps
-from flask_debugtoolbar import DebugToolbarExtension
+#from flask_debugtoolbar import DebugToolbarExtension
 
 ''' Hauptseite - wird angezeigt, wenn man auf 127.0.0.1:5000 bzw localhost:5000 geht (vorher ausführen) '''
 
@@ -11,7 +11,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 app = Flask(__name__)
 app.debug=True
 app.secret_key="key123"
-toolbar = DebugToolbarExtension(app)
+#toolbar = DebugToolbarExtension(app)
 
 DATABASE = 'Oper.db'
 
@@ -58,6 +58,13 @@ def init_db():
             db.cursor().executescript(f.read())
         db.commit()
 
+def insert_dummies():
+    with app.app_context():
+        db = get_db()
+        with app.open_resource('dummys.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
@@ -65,10 +72,18 @@ def close_connection(exception):
         db.close()
 
 # Überprüft ob DB bereits besteht und initialisiert die DB wenn nicht
+
 def CheckIfDbExists():
     if not os.path.isfile(DATABASE):
-        print("not true")
+        print("Database does not exist yet. Creating new Database: ", DATABASE)
         init_db()
+        print("\nDatabase created successfully. Inserting Dummy values.. ")
+        try:
+            insert_dummies()
+            print("Success")
+
+        except:
+            print("Error inserting dummies")
     else:
         print("Using existing database: " + DATABASE)
     
@@ -89,8 +104,14 @@ def buchung():
 
 @app.route('/bevorstehend')
 def bevorstehend():
-    return render_template('bevorstehend.html')
 
+    auffuehrungen = query_db("SELECT * FROM users")
+
+    if auffuehrungen:
+        return render_template('bevorstehend.html', auffuehrungen = auffuehrungen)
+    else:
+        msg = 'No Articles Found'
+        return render_template('bevorstehend.html', msg=msg)
 
 # Register Form Class
 class RegisterForm(Form):
