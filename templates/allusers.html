@@ -1,7 +1,8 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h1>Alle Personen die uns bekannt sind</h1>
+  <h1>Alle Personen, die uns bekannt sind</h1>
+  <h3>Registrierte User</h3>
   <ul class="list-group">
       <table class="table table-striped">
           <tr>
@@ -27,5 +28,81 @@
             </tr>
           {% endfor %}
         </table>
+        <h3>Angestellte</h3>
+        <table class="table table-striped">
+          <tr>
+            <th>Angestelltennummer</th>
+            <th>Vorname</th>
+            <th>Nachname</th>
+            <th>SozNr</th>
+            <th>Ort</th>
+            <th>Adresse</th>
+            <th></th>
+            <th></th>
+          </tr>
+          {% for angestellter in angestellte %}
+                <tr>
+              <td>{{angestellter.Angestelltennummer}}</td>
+                <td> {{angestellter.Vorname}}</td>
+                <td>{{angestellter.Nachname}}</td>
+                <td>{{angestellter.SozNr}}</td>
+                <td>{{angestellter.Ort}}</td>
+                <td>{{angestellter.Adresse}}</td>
+              <td>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </table>
+      <h3>Besucher</h3>
+      <table class="table table-striped">
+        <tr>
+          <th>Kundennummer</th>
+          <th>Vorname</th>
+          <th>Nachname</th>
+          <th>SozNr</th>
+          <th>Ort</th>
+          <th>Adresse</th>
+          <th></th>
+          <th></th>
+        </tr>
+        {% for besucherr in besucher %}
+              <tr>
+            <td>{{besucherr.Kundennummer}}</td>
+              <td> {{besucherr.Vorname}}</td>
+              <td>{{besucherr.Nachname}}</td>
+              <td>{{besucherr.SozNr}}</td>
+              <td>{{besucherr.Ort}}</td>
+              <td>{{besucherr.Adresse}}</td>
+            <td>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+      <h3>Sänger</h3>
+      <table class="table table-striped">
+        <tr>
+          <th>Künstlername</th>
+          <th>Vorname</th>
+          <th>Nachname</th>
+          <th>SozNr</th>
+          <th>Ort</th>
+          <th>Adresse</th>
+          <th></th>
+          <th></th>
+        </tr>
+        {% for saengerr in saenger %}
+              <tr>
+            <td>{{saengerr.Künstlername}}</td>
+              <td> {{saengerr.Vorname}}</td>
+              <td>{{saengerr.Nachname}}</td>
+              <td>{{saengerr.SozNr}}</td>
+              <td>{{saengerr.Ort}}</td>
+              <td>{{saengerr.Adresse}}</td>
+            <td>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
   </ul>
 {% endblock %}

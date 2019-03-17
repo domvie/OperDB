@@ -1,5 +1,5 @@
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField, DateTimeField, DateField, TimeField
-
+from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField, DateField, TimeField, SelectField
+import sqlite3 
 class SearchForm(Form):
     name = StringField('Titel/Name der Aufführung', [validators.Length(min=0, max=30)])
     datum = DateField('Datum (YYYY-MM-DD)')
@@ -22,6 +22,8 @@ class RegisterForm(Form):
 
 # Buchung/reservieren Formular
 class ReservierungsFormular(Form):
-    name = StringField('Titel/Name der Aufführung', [validators.Length(min=1, max=30)])
+    choices = [('Zauberflöte', 'Zauberflöte'),('La Bohème', 'La Bohème'),('Aida', 'Aida')]
+    name = SelectField('Titel/Name der Aufführung', choices = choices)
     datum = DateField('Datum (YYYY-MM-DD)')
     uhrzeit = TimeField('Uhrzeit (HH:MM)')
+

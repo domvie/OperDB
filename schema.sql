@@ -72,7 +72,7 @@ CREATE TABLE Oper_gehört_Rollenbuchtypen
 CREATE TABLE Aufführung_von
 (
     Datum DATE,
-    Uhrzeit DATETIME,
+    Uhrzeit TIME,
     Dirigent VARCHAR2(30),
     Budget NUMBER(7),
     Name VARCHAR2(30),
@@ -86,7 +86,7 @@ CREATE TABLE reservieren
     Reservierungsnummer VARCHAR2(8),
     Datum DATE
         CONSTRAINT nn_reservieren_Datum NOT NULL,
-    Uhrzeit DATETIME
+    Uhrzeit TIME
         CONSTRAINT nn_reservieren_Uhrzeit NOT NULL,
     Sitzplatz VARCHAR2(4),
     CONSTRAINT pk_reservieren PRIMARY KEY (Reservierungsnummer),
@@ -133,7 +133,7 @@ CREATE TABLE singen
 (
     SozNr NUMBER(10),
     Datum DATE,
-    Uhrzeit DATETIME,
+    Uhrzeit TIME,
     CONSTRAINT pk_singen PRIMARY KEY (SozNr),
     CONSTRAINT fk_singen_Sänger FOREIGN KEY (SozNr) REFERENCES Sänger (SozNr) ON DELETE CASCADE,
     CONSTRAINT fk_singen_Aufführung_von FOREIGN KEY (Datum, Uhrzeit) REFERENCES Aufführung_von ON DELETE CASCADE

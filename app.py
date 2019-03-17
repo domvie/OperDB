@@ -3,7 +3,7 @@ from passlib.hash import sha256_crypt, pbkdf2_sha256
 from functools import wraps
 from db import get_db, init_db, query_db, insert_db, close_connection, CheckIfDbExists, insert_dummies
 from forms import RegisterForm, SearchForm, ReservierungsFormular
-
+import random
 ''' Hauptseite - wird angezeigt, wenn man auf 127.0.0.1:5000 bzw localhost:5000 geht (vorher ausführen) '''
 
 """Create and configure an instance of the Flask application."""
@@ -45,9 +45,12 @@ def suche():
 @app.route('/allusers')
 def allusers():
 
-    users = query_db("SELECT * FROM users JOIN Person")
-    if users:
-        return render_template('allusers.html', users = users)
+    users = query_db("SELECT * FROM users NATURAL JOIN Person")
+    angestellte = query_db("SELECT * FROM Angestellte_hat_Gehaltskonto NATURAL JOIN Person")
+    besucher = query_db("SELECT * FROM Besucher NATURAL JOIN Person")
+    saenger = query_db("SELECT * FROM Sänger NATURAL JOIN Person")
+    if users or angestellte or besucher or saenger:
+        return render_template('allusers.html', users = users, angestellte=angestellte, besucher=besucher, saenger=saenger)
     else:
         msg = 'No Persons found. DB empty?'
         return render_template('allusers.html', msg=msg)
@@ -95,16 +98,17 @@ def login():
         # Get Form Fields
         username = request.form['username']
         password_candidate = request.form['password']
-
         result = query_db("SELECT * FROM users WHERE username = ?", (username,), one=True)
         if result:
             # Get stored hash
             password = result['password']
+            soznr = result['SozNr']
             # Compare Passwords
             if pbkdf2_sha256.verify(password_candidate, password):
                 # Passed
                 session['logged_in'] = True
                 session['username'] = username
+                session['soznr'] = soznr
 
                 flash('You are now logged in', 'success')
                 return redirect(url_for('index'))
@@ -136,20 +140,30 @@ def buchung():
         name = request.form['name']
         datum = request.form['datum']
         uhrzeit = request.form['uhrzeit']
+        soznr = session['soznr']
+        resnr = random.randint(10000,99999)
+        sitzplatz = "A" + str(random.randint(1,100))
 
-        try:
-            insert_db("INSERT INTO Aufführung_von(Datum, Uhrzeit, Name) VALUES (?,?,?)", (datum, uhrzeit, name))
-            flash('Buchung erfolgreich!')
-        except:
-            flash('Fehler bei der Buchung!')
+
+        result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
+        if result:
+            try:
+                #insert_db("INSERT INTO Aufführung_von(Datum, Uhrzeit, Name) VALUES (?,?,?)", (datum, uhrzeit, name))
+                insert_db("INSERT INTO reservieren(SozNr, Reservierungsnummer, Datum, Uhrzeit, Sitzplatz) VALUES (?,?,?,?,?)", (soznr, resnr, datum, uhrzeit, sitzplatz))
+                flash('Buchung erfolgreich!')
+            except:
+                flash('Fehler bei der Buchung! Datum & Uhrzeit richtig?')
+                return redirect(url_for('buchung'))
+        else:
+            flash('Aufführung existiert nicht! Bitte richtiges Datum & Uhrzeit wählen.')
             return redirect(url_for('buchung'))
-    
     return render_template('buchung.html', form=form)
 
 @app.route('/buchungen')
 @is_logged_in
 def buchungen():
-    buchungen = query_db("SELECT * FROM reservieren")
+    soznr = session['soznr']
+    buchungen = query_db("SELECT * FROM reservieren r JOIN Aufführung_von a ON r.Datum = a.Datum AND r.Uhrzeit = a.Uhrzeit WHERE SozNr = ?", (soznr,))
 
     if buchungen:
         return render_template('buchungen.html', buchungen=buchungen)

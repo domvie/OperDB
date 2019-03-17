@@ -4,7 +4,7 @@
   <h1>Ihre Buchungen</h1>
   <ul class="list-group">
     {% for buchung in buchungen %}
-      <li class="list-group-item"><a href="buchungen/{{buchung.Reservierungsnummer}}">{{buchung.Reservierungsnummer}}, Sitzplatz: {{buchung.Sitzplatz}}</a></li>
+      <li class="list-group-item"><a href="buchungen/{{buchung.Reservierungsnummer}}">{{buchung.Name}}, ResNr.: {{buchung.Reservierungsnummer}}, Sitzplatz: {{buchung.Sitzplatz}}, am {{buchung.Datum}} {{buchung.Uhrzeit}}</a></li>
     {% endfor %}
   </ul>
 {% endblock %}
