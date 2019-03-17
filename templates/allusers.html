@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Alle Personen die uns bekannt sind</h1>
+  <ul class="list-group">
+      <table class="table table-striped">
+          <tr>
+            <th>Username</th>
+            <th>Vorname</th>
+            <th>Nachname</th>
+            <th>SozNr</th>
+            <th>Ort</th>
+            <th>Adresse</th>
+            <th></th>
+            <th></th>
+          </tr>
+          {% for user in users %}
+                <tr>
+              <td>{{user.username}}</td>
+                <td> {{user.Vorname}}</td>
+                <td>{{user.Nachname}}</td>
+                <td>{{user.SozNr}}</td>
+                <td>{{user.Ort}}</td>
+                <td>{{user.Adresse}}</td>
+              <td>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+  </ul>
+{% endblock %}

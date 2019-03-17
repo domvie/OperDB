@@ -1,9 +1,8 @@
-import os, sys, sqlite3
-from flask import Flask, render_template, flash, url_for, session, request, logging, g, redirect
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField, DateTimeField, DateField, TimeField
+from flask import Flask, render_template, flash, url_for, session, request, logging, redirect
 from passlib.hash import sha256_crypt, pbkdf2_sha256
 from functools import wraps
-#from flask_debugtoolbar import DebugToolbarExtension
+from db import get_db, init_db, query_db, insert_db, close_connection, CheckIfDbExists, insert_dummies
+from forms import RegisterForm, SearchForm, ReservierungsFormular
 
 ''' Hauptseite - wird angezeigt, wenn man auf 127.0.0.1:5000 bzw localhost:5000 geht (vorher ausführen) '''
 
@@ -11,86 +10,15 @@ from functools import wraps
 app = Flask(__name__)
 app.debug=True
 app.secret_key="key123"
-#toolbar = DebugToolbarExtension(app)
-
-DATABASE = 'Oper.db'
 
 # Hilfestellung bzw. Quelle der Funktionen: http://flask.pocoo.org/docs/1.0/patterns/sqlite3/
 # Alternativ gehts so https://www.tutorialspoint.com/flask/flask_sqlite.htm aber wills lieber mal auf diesem Web probieren
-
-# Funktion baut Verbindung zur DB auf und returned db Objekt
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    #Ergebnisse zu einem dict konvertieren
-    def make_dicts(cursor, row):
-        return dict((cursor.description[idx][0], value)
-            for idx, value in enumerate(row))
-    db.row_factory = make_dicts
-    return db
-
-
-#Funktion um eine query durchzuführen, returned Ergebnisliste
-def query_db(query, args=(), one=False):
-    cur = get_db().execute(query, args)
-    rv = cur.fetchall()
-    cur.close()
-    return (rv[0] if rv else None) if one else rv
-
-def insert_db(query, args=()):
-    with sqlite3.connect(DATABASE) as con:
-        cur = con.cursor()
-        cur.execute(query,args)
-    con.commit()
-    con.close()
-
-# Initialisiert die DB mit dem Schema
-def init_db():
-    with app.app_context():
-        db = get_db()
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-
-def insert_dummies():
-    with app.app_context():
-        db = get_db()
-        with app.open_resource('dummys.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
-
-# Überprüft ob DB bereits besteht und initialisiert die DB wenn nicht
-def CheckIfDbExists():
-    if not os.path.isfile(DATABASE):
-        print("Database does not exist yet. Creating new Database: ", DATABASE)
-        init_db()
-        print("\nDatabase created successfully. Inserting Dummy values.. ")
-        try:
-            insert_dummies()
-            print("Success")
-        except:
-            print("Error inserting dummies")
-    else:
-        print("Using existing database: " + DATABASE)
     
 CheckIfDbExists()
 
 @app.route('/')
 def index():
     return render_template('home.html')
-
-class SearchForm(Form):
-    name = StringField('Titel/Name der Aufführung', [validators.Length(min=0, max=30)])
-    datum = DateField('Datum (YYYY-MM-DD)')
-    dirigent = StringField('Dirigent', [validators.Length(min=0, max=30)])
-    saenger = StringField('Sänger', [validators.Length(min=0, max=30)])
 
 @app.route('/suche', methods=['GET', 'POST'])
 def suche():
@@ -100,13 +28,13 @@ def suche():
         if request.form['name']:
             name = request.form['name']
             results += query_db("SELECT * FROM Aufführung_von WHERE Name LIKE ?", (name,))
-        elif request.method['dirigent']:
+        elif request.form['dirigent']:
             dirigent = request.form['dirigent']
             results += query_db("SELECT * FROM Aufführung_von WHERE Dirigent LIKE ?", (dirigent,))
-        elif request.method['datum']:
+        elif request.form['datum']:
             datum = request.form['datum']
             results += query_db("SELECT * FROM Aufführung_von WHERE Datum LIKE ?", (datum,))
-        elif request.method['saenger']:
+        elif request.form['saenger']:
             saenger = request.form['saenger']
             results += query_db("SELECT * FROM Sänger WHERE Künstlername LIKE ?", (saenger,))
         return render_template("ergebnisse.html", results = results)
@@ -114,26 +42,25 @@ def suche():
     return render_template("suche.html", form=form)
 
 
+@app.route('/allusers')
+def allusers():
+
+    users = query_db("SELECT * FROM users JOIN Person")
+    if users:
+        return render_template('allusers.html', users = users)
+    else:
+        msg = 'No Persons found. DB empty?'
+        return render_template('allusers.html', msg=msg)
 
 @app.route('/bevorstehend')
 def bevorstehend():
 
-    auffuehrungen = query_db("SELECT * FROM Aufführung_von")
+    auffuehrungen = query_db("SELECT * FROM Aufführung_von WHERE Datum > DATE('now')")
     if auffuehrungen:
         return render_template('bevorstehend.html', auffuehrungen = auffuehrungen)
     else:
         msg = 'No Articles Found'
         return render_template('bevorstehend.html', msg=msg)
-
-# Register Form Class
-class RegisterForm(Form):
-    username = StringField('Username', [validators.Length(min=4, max=25)])
-    password = PasswordField('Password', [
-        validators.DataRequired(),
-        validators.EqualTo('confirm', message='Passwords do not match')
-    ])
-    confirm = PasswordField('Confirm Password')
-
 
 # User Register
 @app.route('/register', methods=['GET', 'POST'])
@@ -141,12 +68,19 @@ def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         username = request.form['username']
+        vorname = request.form['vorname']
+        nachname = request.form['nachname']
+        soznr = request.form['soznr']
+        ort = request.form['ort']
+        adresse = request.form['adresse']
         password = pbkdf2_sha256.hash(request.form['password'])
 
-        query = 'INSERT INTO users (username, password) VALUES(?,?);'
+        query = 'INSERT INTO users (username, password, SozNr) VALUES(?,?,?);'
+        query_person = 'INSERT INTO Person (SozNr, Vorname, Nachname, Ort, Adresse) VALUES(?,?,?,?,?);'
         try:
-            insert_db(query, (username, password))
-            flash('You are now registered and can log in', 'success')
+            insert_db(query, (username, password, soznr))
+            insert_db(query_person, (soznr, vorname, nachname, ort, adresse))
+            flash('Vielen Dank für die Registrierung! Sie sind nun angelegt und können sich mit Username & Passwort einloggen.', 'success')
             return redirect(url_for('login'))
         except: 
             flash('Error bei SQL Query','error')
@@ -194,13 +128,6 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
-
-# Buchung/reservieren Formular
-class ReservierungsFormular(Form):
-    name = StringField('Titel/Name der Aufführung', [validators.Length(min=1, max=30)])
-    datum = DateField('Datum (YYYY-MM-DD)')
-    uhrzeit = TimeField('Uhrzeit (HH:MM)')
-
 @app.route('/buchung', methods=['GET', 'POST'])
 @is_logged_in
 def buchung():
@@ -212,7 +139,7 @@ def buchung():
 
         try:
             insert_db("INSERT INTO Aufführung_von(Datum, Uhrzeit, Name) VALUES (?,?,?)", (datum, uhrzeit, name))
-            flash('Erfolgreich gebucht!')
+            flash('Buchung erfolgreich!')
         except:
             flash('Fehler bei der Buchung!')
             return redirect(url_for('buchung'))

@@ -20,12 +20,6 @@ DROP TABLE IF EXISTS Rollenbücher_entlehnen;
 DROP TABLE IF EXISTS vertragen_sich_nicht;
 DROP TABLE IF EXISTS users;
 
-CREATE TABLE users 
-(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-);
 
 CREATE TABLE Person 
 (
@@ -35,6 +29,16 @@ CREATE TABLE Person
     Ort VARCHAR2 (20),
     Adresse VARCHAR2(50),
     CONSTRAINT pk_Person PRIMARY KEY (SozNr)
+);
+
+
+CREATE TABLE users 
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    SozNr NUMBER(10) NOT NULL,
+    CONSTRAINT fk_users FOREIGN KEY (SozNr) REFERENCES Person (SozNr)
 );
 
 CREATE TABLE Telefonnummer

@@ -1,10 +1,28 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h1>Bevorstehende Aufführungen</h1>
+  <h1>Nächste Aufführungen</h1>
   <ul class="list-group">
-    {% for auffuehrung in auffuehrungen %}
-      <li class="list-group-item"><a href="bevorstehend/{{auffuehrung.Name}}">{{auffuehrung.Name}}</a></li>
-    {% endfor %}
+      <table class="table table-striped">
+          <tr>
+            <th>Name</th>
+            <th>Datum</th>
+            <th>Uhrzeit</th>
+            <th>Dirigent</th>
+            <th></th>
+            <th></th>
+          </tr>
+          {% for auffuehrung in auffuehrungen %}
+                <tr>
+              <td><li class="list-group-item"><a href="bevorstehend/{{auffuehrung.Name}}">{{auffuehrung.Name}}</td>
+                <td> {{auffuehrung.Datum}}</td>
+                <td>{{auffuehrung.Uhrzeit}}</td>
+                <td>{{auffuehrung.Dirigent}}</td></a></li>
+
+              <td>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
   </ul>
 {% endblock %}
