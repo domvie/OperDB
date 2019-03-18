@@ -1,5 +1,6 @@
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators, IntegerField, DateField, TimeField, SelectField
 import sqlite3 
+
 class SearchForm(Form):
     name = StringField('Titel/Name der Aufführung', [validators.Length(min=0, max=30)])
     datum = DateField('Datum (YYYY-MM-DD)')
@@ -22,7 +23,14 @@ class RegisterForm(Form):
 
 # Buchung/reservieren Formular
 class ReservierungsFormular(Form):
-    choices = [('Zauberflöte', 'Zauberflöte'),('La Bohème', 'La Bohème'),('Aida', 'Aida')]
+    #choices für Dropdown
+    con = sqlite3.connect('Oper.db')
+    cur = con.cursor()
+    cur.execute("SELECT DISTINCT Name FROM Aufführung_von")
+    choices = cur.fetchall()
+    con.close()
+    for i, v in enumerate(choices):
+        choices[i] *= 2
     name = SelectField('Titel/Name der Aufführung', choices = choices)
     datum = DateField('Datum (YYYY-MM-DD)')
     uhrzeit = TimeField('Uhrzeit (HH:MM)')
