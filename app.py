@@ -17,16 +17,18 @@ DATABASE = 'Oper.db'
 
 # Hilfestellung bzw. Quelle der Funktionen: http://flask.pocoo.org/docs/1.0/patterns/sqlite3/
 # Alternativ gehts so https://www.tutorialspoint.com/flask/flask_sqlite.htm aber wills lieber mal auf diesem Web probieren
-    
+
+# DB erstellen nach Schema und mit Dummys befüllen, falls sie noch nicht existiert:
 CheckIfDbExists()
 
+#Anschließend import der Formularklassen da diese auf DB zugreifen
 from forms import RegisterForm, SearchForm, ReservierungsFormular
-
 
 @app.route('/')
 def index():
     return render_template('home.html')
 
+#Suchfunktion
 @app.route('/suche', methods=['GET', 'POST'])
 def suche():
     form = SearchForm(request.form)
@@ -44,11 +46,14 @@ def suche():
         elif request.form['datum']:
             datum = request.form['datum']
             results += query_db("SELECT * FROM Aufführung_von WHERE Datum LIKE ?", (datum,))
+        elif request.form['saenger']:
+            saenger = request.form['saenger']
+            results += query_db("SELECT * FROM Sänger WHERE Künstlername LIKE ?", (saenger,))
         return render_template("ergebnisse.html", results = results)
     
     return render_template("suche.html", form=form)
 
-
+#Zeigt alle angelegten Personen an
 @app.route('/allusers')
 def allusers():
 
@@ -62,6 +67,7 @@ def allusers():
         msg = 'No Persons found. DB empty?'
         return render_template('allusers.html', msg=msg)
 
+#Anzeigen der bevorstehenden Aufführungen
 @app.route('/bevorstehend')
 @app.route('/bevorstehend/<string:Name>')
 def bevorstehend(Name=None):
@@ -144,14 +150,14 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
-
+# Aufführung buchen
 @app.route('/buchung', methods=['GET', 'POST'])
 @app.route('/buchung/<string:Datum>', methods=['GET', 'POST'])
 @is_logged_in
 def buchung(Datum=None):
 
     form = ReservierungsFormular(request.form)
-
+    # Falls man nicht weitergeleitet wurde von "bevorstehend.html"
     if Datum is None:
         if request.method == 'POST' and form.validate():
             name = request.form['name']
@@ -173,6 +179,8 @@ def buchung(Datum=None):
                 flash('Aufführung existiert nicht! Bitte richtiges Datum & Uhrzeit wählen.')
                 return redirect(url_for('buchung'))
         return render_template('buchung.html', form=form)
+    
+    # Falls man weitergeleitet wurde von "bevorstehend.html", Formulardaten ausfüllen
     else:
         # Buchung ausfüllen
         try:
@@ -191,7 +199,6 @@ def buchung(Datum=None):
             resnr = random.randint(10000,99999)
             sitzplatz = "A" + str(random.randint(1,100))
 
-
             result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
             if result:
                 try:
@@ -205,6 +212,7 @@ def buchung(Datum=None):
                 return redirect(url_for('buchung'))
         return render_template('buchung.html', form=form)
 
+#Eigene Buchungen anzeigen lassen (mit SozNr verbunden)
 @app.route('/buchungen')
 @is_logged_in
 def buchungen():
@@ -250,7 +258,7 @@ def edit_buchung(Reservierungsnummer):
 
     return render_template('edit_buchung.html', form=form)
 
-# Delete Article
+# Buchung löschen
 @app.route('/delete_buchung/<string:Reservierungsnummer>', methods=['POST'])
 @is_logged_in
 def delete_buchung(Reservierungsnummer):
