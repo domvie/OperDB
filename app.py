@@ -33,8 +33,11 @@ def suche():
     if request.method == 'POST':
         results = []
         if request.form['name']:
-            name = request.form['name']
-            results += query_db("SELECT * FROM Aufführung_von WHERE Name LIKE ?", (name,))
+            name = "%" + request.form['name'] + "%"
+            results += query_db("SELECT DISTINCT A.Name, A.Datum, A.Uhrzeit, A.Dirigent, P.Künstlername \
+                                 FROM Aufführung_von A INNER JOIN singen s ON A.Datum=s.Datum AND A.Uhrzeit=s.Uhrzeit \
+                                                       INNER JOIN Sänger P ON s.SozNr = P.Soznr \
+                                                       WHERE A.Name LIKE ?", (name,))
         elif request.form['dirigent']:
             dirigent = request.form['dirigent']
             results += query_db("SELECT * FROM Aufführung_von WHERE Dirigent LIKE ?", (dirigent,))
