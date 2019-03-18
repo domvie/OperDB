@@ -171,7 +171,7 @@ def buchung(Datum=None):
             resnr = random.randint(10000,99999)
             sitzplatz = random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ') + str(random.randint(1,100))
 
-            result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
+            result = query_db("SELECT * FROM Aufführung_von WHERE Datum = ? AND Uhrzeit = ? AND Name = ? AND Datum > DATE('now')", (datum, uhrzeit, name))
             if result:
                 try:
                     insert_db("INSERT INTO reservieren(SozNr, Reservierungsnummer, Datum, Uhrzeit, Sitzplatz) VALUES (?,?,?,?,?)", (soznr, resnr, datum, uhrzeit, sitzplatz))
@@ -203,7 +203,7 @@ def buchung(Datum=None):
             resnr = random.randint(10000,99999)
             sitzplatz = random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ') + str(random.randint(1,100)) 
 
-            result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ", (datum,uhrzeit,name))
+            result = query_db("SELECT * FROM Aufführung_von WHERE Datum = ? AND Uhrzeit = ? AND Name = ? AND Datum > DATE('now') ", (datum, uhrzeit, name))
             if result:
                 try:
                     insert_db("INSERT INTO reservieren(SozNr, Reservierungsnummer, Datum, Uhrzeit, Sitzplatz) VALUES (?,?,?,?,?)", (soznr, resnr, datum, uhrzeit, sitzplatz))
