@@ -35,16 +35,22 @@ def suche():
         results = []
         if request.form['name']:
             name = "%" + request.form['name'] + "%"
-            results += query_db("SELECT * FROM Aufführung_von WHERE Name LIKE ?", (name,))
+            results += query_db("SELECT DISTINCT A.Name, A.Datum, A.Uhrzeit, A.Dirigent, P.Künstlername \
+                                 FROM Aufführung_von A INNER JOIN singen s ON A.Datum=s.Datum AND A.Uhrzeit=s.Uhrzeit \
+                                                       INNER JOIN Sänger P ON s.SozNr = P.Soznr \
+                                                       WHERE A.Name LIKE ?", (name,))
         elif request.form['dirigent']:
             dirigent = "%" + request.form['dirigent'] + "%"
             results += query_db("SELECT * FROM Aufführung_von WHERE Dirigent LIKE ?", (dirigent,))
         elif request.form['datum']:
-            datum = "%" + request.form['datum'] + "%"
+            datum = request.form['datum']
             results += query_db("SELECT * FROM Aufführung_von WHERE Datum LIKE ?", (datum,))
         elif request.form['saenger']:
             saenger = "%" + request.form['saenger'] + "%"
-            results += query_db("SELECT * FROM Sänger WHERE Künstlername LIKE ?", (saenger,))
+            results += query_db("SELECT DISTINCT A.Name, A.Datum, A.Uhrzeit, A.Dirigent, P.Künstlername \
+                                 FROM Aufführung_von A INNER JOIN singen s ON A.Datum=s.Datum AND A.Uhrzeit=s.Uhrzeit \
+                                                       INNER JOIN Sänger P ON s.SozNr = P.Soznr \
+                                                       WHERE P.Künstlername LIKE ?", (saenger,))
         return render_template("ergebnisse.html", results = results)
     
     return render_template("suche.html", form=form)
