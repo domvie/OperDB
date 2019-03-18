@@ -43,6 +43,9 @@ def suche():
         elif request.form['datum']:
             datum = request.form['datum']
             results += query_db("SELECT * FROM Aufführung_von WHERE Datum LIKE ?", (datum,))
+        elif request.form['saenger']:
+            saenger = request.form['saenger']
+            results += query_db("SELECT * FROM Sänger WHERE Künstlername LIKE ?", (saenger,))
         return render_template("ergebnisse.html", results = results)
     
     return render_template("suche.html", form=form)
