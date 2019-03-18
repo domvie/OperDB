@@ -8,18 +8,13 @@
       <th>Name</th>
       <th>Datum</th>
       <th>Dirigent</th>
-      <th>Sänger</th>
-      <th></th>
-      <th></th>
+      
     </tr>
     {% for result in results %}
       <tr>
         <td>{{result.Name}}</td>
         <td>{{result.Datum}}</td>
         <td>{{result.Dirigent}}</td>
-        <td>{{result.Sänger}}</td>
-        <td>
-        </td>
       </tr>
     {% endfor %}
   </table>

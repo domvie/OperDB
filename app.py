@@ -1,21 +1,27 @@
+#!/usr/bin/env python3
+
 from flask import Flask, render_template, flash, url_for, session, request, logging, redirect
 from passlib.hash import sha256_crypt, pbkdf2_sha256
 from functools import wraps
 from datetime import datetime, time
 from db import get_db, init_db, query_db, insert_db, close_connection, CheckIfDbExists, insert_dummies
-from forms import RegisterForm, SearchForm, ReservierungsFormular
-import random
+import random, sqlite3
+
 ''' Hauptseite - wird angezeigt, wenn man auf 127.0.0.1:5000 bzw localhost:5000 geht (vorher ausführen) '''
 
-"""Create and configure an instance of the Flask application."""
+"""Erstellt eine Flask-App"""
 app = Flask(__name__)
 app.debug=True
 app.secret_key="key123"
+DATABASE = 'Oper.db'
 
 # Hilfestellung bzw. Quelle der Funktionen: http://flask.pocoo.org/docs/1.0/patterns/sqlite3/
 # Alternativ gehts so https://www.tutorialspoint.com/flask/flask_sqlite.htm aber wills lieber mal auf diesem Web probieren
     
 CheckIfDbExists()
+
+from forms import RegisterForm, SearchForm, ReservierungsFormular
+
 
 @app.route('/')
 def index():
@@ -35,9 +41,6 @@ def suche():
         elif request.form['datum']:
             datum = request.form['datum']
             results += query_db("SELECT * FROM Aufführung_von WHERE Datum LIKE ?", (datum,))
-        elif request.form['saenger']:
-            saenger = request.form['saenger']
-            results += query_db("SELECT * FROM Sänger WHERE Künstlername LIKE ?", (saenger,))
         return render_template("ergebnisse.html", results = results)
     
     return render_template("suche.html", form=form)
@@ -137,6 +140,7 @@ def is_logged_in(f):
             flash('Unauthorized, Please login', 'danger')
             return redirect(url_for('login'))
     return wrap
+
 
 @app.route('/buchung', methods=['GET', 'POST'])
 @app.route('/buchung/<string:Datum>', methods=['GET', 'POST'])
@@ -267,4 +271,3 @@ def logout():
 if __name__ == "__main__":
     app.secret_key="key123"
     app.run(debug=True)
-
