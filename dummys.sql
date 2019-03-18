@@ -147,7 +147,18 @@ INSERT INTO Aufführung_von VALUES ("2019-02-10", "20:00", "Simon Rattle", 15000
 INSERT INTO Aufführung_von VALUES ("2019-02-11", "21:00", "Simon Rattle", 15000, "Zauberflöte"); 
 INSERT INTO Aufführung_von VALUES ("2019-03-28", "12:30", "Simon Rattle", 15000, "Zauberflöte"); 
 INSERT INTO Aufführung_von VALUES ("2018-11-12", "19:30", "Christoph von Dohnányi", 20000, "Aida"); 
-INSERT INTO Aufführung_von VALUES ("2018-12-26", "18:30", "Arnold Östman", 25000, "La Bohème"); 
+INSERT INTO Aufführung_von VALUES ("2020-12-26", "18:30", "Arnold Östman", 25000, "La Bohème"); 
+INSERT INTO Aufführung_von VALUES ("2019-12-26", "18:30", "Arnold Östman", 25000, "La Bohème"); 
+INSERT INTO Aufführung_von VALUES ("2019-12-01", "19:30", "Arnold Östman", 25000, "La Bohème"); 
+INSERT INTO Aufführung_von VALUES ("2019-12-26", "20:30", "Arnold Östman", 25000, "La Bohème"); 
+INSERT INTO Aufführung_von VALUES ("2019-12-26", "21:30", "Arnold Östman", 25000, "La Bohème"); 
+INSERT INTO Aufführung_von VALUES ("2020-03-21", "19:00", "Christoph von Dohnányi", 20000, "Aida"); 
+INSERT INTO Aufführung_von VALUES ("2020-04-26", "21:00", "Christoph von Dohnányi", 20000, "Aida"); 
+INSERT INTO Aufführung_von VALUES ("2010-12-26", "19:00", "Christoph von Dohnányi", 20000, "Aida"); 
+INSERT INTO Aufführung_von VALUES ("2021-06-26", "19:00", "Christoph von Dohnányi", 20000, "Aida"); 
+INSERT INTO Aufführung_von VALUES ("2020-01-26", "19:00", "Christoph von Dohnányi", 20000, "Aida"); 
+
+
 SELECT * FROM Aufführung_von;
 
 INSERT INTO reservieren VALUES (7609010257, 49438, "2019-02-11", "21:00", "A123"); 
