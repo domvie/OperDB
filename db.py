@@ -2,7 +2,6 @@ import sqlite3, os
 from flask import Flask, g
 
 app = Flask(__name__)
-app.debug=True
 app.secret_key="key123"
 
 

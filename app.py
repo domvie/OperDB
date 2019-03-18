@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from flask import Flask, render_template, flash, url_for, session, request, logging, redirect
-from passlib.hash import sha256_crypt, pbkdf2_sha256
+from flask import Flask, render_template, flash, url_for, session, request, redirect
+from passlib.hash import pbkdf2_sha256
 from functools import wraps
-from datetime import datetime, time
-from db import get_db, init_db, query_db, insert_db, close_connection, CheckIfDbExists, insert_dummies
-import random, sqlite3
+from datetime import datetime
+from db import query_db, insert_db, CheckIfDbExists
+import random
 
 ''' Hauptseite - wird angezeigt, wenn man auf 127.0.0.1:5000 bzw localhost:5000 geht (vorher ausführen) '''
 
@@ -16,7 +16,6 @@ app.secret_key="key123"
 DATABASE = 'Oper.db'
 
 # Hilfestellung bzw. Quelle der Funktionen: http://flask.pocoo.org/docs/1.0/patterns/sqlite3/
-# Alternativ gehts so https://www.tutorialspoint.com/flask/flask_sqlite.htm aber wills lieber mal auf diesem Web probieren
 
 # DB erstellen nach Schema und mit Dummys befüllen, falls sie noch nicht existiert:
 CheckIfDbExists()
@@ -35,16 +34,16 @@ def suche():
     if request.method == 'POST':
         results = []
         if request.form['name']:
-            name = request.form['name']
+            name = "%" + request.form['name'] + "%"
             results += query_db("SELECT * FROM Aufführung_von WHERE Name LIKE ?", (name,))
         elif request.form['dirigent']:
-            dirigent = request.form['dirigent']
+            dirigent = "%" + request.form['dirigent'] + "%"
             results += query_db("SELECT * FROM Aufführung_von WHERE Dirigent LIKE ?", (dirigent,))
         elif request.form['datum']:
-            datum = request.form['datum']
+            datum = "%" + request.form['datum'] + "%"
             results += query_db("SELECT * FROM Aufführung_von WHERE Datum LIKE ?", (datum,))
         elif request.form['saenger']:
-            saenger = request.form['saenger']
+            saenger = "%" + request.form['saenger'] + "%"
             results += query_db("SELECT * FROM Sänger WHERE Künstlername LIKE ?", (saenger,))
         return render_template("ergebnisse.html", results = results)
     
@@ -58,8 +57,10 @@ def allusers():
     angestellte = query_db("SELECT * FROM Angestellte_hat_Gehaltskonto NATURAL JOIN Person")
     besucher = query_db("SELECT * FROM Besucher NATURAL JOIN Person")
     saenger = query_db("SELECT * FROM Sänger NATURAL JOIN Person")
-    if users or angestellte or besucher or saenger:
-        return render_template('allusers.html', users = users, angestellte=angestellte, besucher=besucher, saenger=saenger)
+    requisiteure = query_db("SELECT * FROM Requisiteur NATURAL JOIN Person")
+
+    if users or angestellte or besucher or saenger or requisiteure:
+        return render_template('allusers.html', users = users, angestellte=angestellte, besucher=besucher, saenger=saenger, requisiteure=requisiteure)
     else:
         msg = 'No Persons found. DB empty?'
         return render_template('allusers.html', msg=msg)
@@ -162,7 +163,7 @@ def buchung(Datum=None):
             uhrzeit = request.form['uhrzeit']
             soznr = session['soznr']
             resnr = random.randint(10000,99999)
-            sitzplatz = "A" + str(random.randint(1,100))
+            sitzplatz = random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ') + str(random.randint(1,100))
 
             result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
             if result:
@@ -194,9 +195,9 @@ def buchung(Datum=None):
             uhrzeit = request.form['uhrzeit']
             soznr = session['soznr']
             resnr = random.randint(10000,99999)
-            sitzplatz = "A" + str(random.randint(1,100))
+            sitzplatz = random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ') + str(random.randint(1,100)) 
 
-            result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
+            result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ", (datum,uhrzeit,name))
             if result:
                 try:
                     insert_db("INSERT INTO reservieren(SozNr, Reservierungsnummer, Datum, Uhrzeit, Sitzplatz) VALUES (?,?,?,?,?)", (soznr, resnr, datum, uhrzeit, sitzplatz))

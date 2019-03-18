@@ -104,5 +104,28 @@
           </tr>
         {% endfor %}
       </table>
+      <h3>Requisiteure</h3>
+      <table class="table table-striped">
+        <tr>
+          <th>Vorname</th>
+          <th>Nachname</th>
+          <th>SozNr</th>
+          <th>Ort</th>
+          <th>Adresse</th>
+          <th></th>
+          <th></th>
+        </tr>
+        {% for requisiteur in requisiteure %}
+              <tr>
+              <td> {{requisiteur.Vorname}}</td>
+              <td>{{requisiteur.Nachname}}</td>
+              <td>{{requisiteur.SozNr}}</td>
+              <td>{{requisiteur.Ort}}</td>
+              <td>{{requisiteur.Adresse}}</td>
+            <td>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
   </ul>
 {% endblock %}
