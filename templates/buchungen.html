@@ -2,9 +2,28 @@
 
 {% block body %}
   <h1>Ihre Buchungen</h1>
-  <ul class="list-group">
+      <table class="table table-striped">
+          <tr>
+            <th>Aufführung</th>
+            <th>Reservierungsnummer</th>
+            <th>Sitzplatz</th>
+            <th>Datum</th>
+            <th>Uhrzeit</th>
+            <th></th>
+            <th></th>
+          </tr>
     {% for buchung in buchungen %}
-      <li class="list-group-item"><a href="buchungen/{{buchung.Reservierungsnummer}}">{{buchung.Name}}, ResNr.: {{buchung.Reservierungsnummer}}, Sitzplatz: {{buchung.Sitzplatz}}, am {{buchung.Datum}} {{buchung.Uhrzeit}}</a></li>
-    {% endfor %}
-  </ul>
+    <tr>
+        <li class="list-group-item"><a href="edit_buchung/{{buchung.Reservierungsnummer}}">
+      <td>{{buchung.Name}}</td>
+      <td>{{buchung.Reservierungsnummer}}</td>
+      <td>{{buchung.Sitzplatz}}</td>
+      <td>{{buchung.Datum}}</td>
+      <td>{{buchung.Uhrzeit}}</td>
+      <td></a></li>
+    <td><a href="edit_buchung/{{buchung.Reservierungsnummer}}" class="btn btn-default pull-left">Buchung ändern</a>
+          <form action="{{url_for('delete_buchung', Reservierungsnummer=buchung.Reservierungsnummer)}}" method="post">
+            <input type="hidden" name="_method" value="DELETE">
+            <input type="submit" value="Löschen" class="btn btn-danger"></form></td>
+            {% endfor %}
 {% endblock %}

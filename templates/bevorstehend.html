@@ -14,11 +14,11 @@
           </tr>
           {% for auffuehrung in auffuehrungen %}
                 <tr>
-              <td><li class="list-group-item"><a href="bevorstehend/{{auffuehrung.Name}}">{{auffuehrung.Name}}</td>
-                <td> {{auffuehrung.Datum}}</td>
+              <td><li class="list-group-item"><a href="/bevorstehend/{{auffuehrung.Name}}">{{auffuehrung.Name}}</td>
+                <td>{{auffuehrung.Datum}}</td>
                 <td>{{auffuehrung.Uhrzeit}}</td>
                 <td>{{auffuehrung.Dirigent}}</td></a></li>
-
+                <td><a href="/buchung/{{auffuehrung.Datum}}" class="btn btn-default pull-left">Buchen</a>
               <td>
               </td>
             </tr>

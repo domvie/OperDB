@@ -26,4 +26,5 @@ class ReservierungsFormular(Form):
     name = SelectField('Titel/Name der Aufführung', choices = choices)
     datum = DateField('Datum (YYYY-MM-DD)')
     uhrzeit = TimeField('Uhrzeit (HH:MM)')
+    sitzplatz = StringField('Sitzplatz')
 

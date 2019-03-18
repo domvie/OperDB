@@ -1,6 +1,7 @@
 from flask import Flask, render_template, flash, url_for, session, request, logging, redirect
 from passlib.hash import sha256_crypt, pbkdf2_sha256
 from functools import wraps
+from datetime import datetime, time
 from db import get_db, init_db, query_db, insert_db, close_connection, CheckIfDbExists, insert_dummies
 from forms import RegisterForm, SearchForm, ReservierungsFormular
 import random
@@ -56,14 +57,19 @@ def allusers():
         return render_template('allusers.html', msg=msg)
 
 @app.route('/bevorstehend')
-def bevorstehend():
+@app.route('/bevorstehend/<string:Name>')
+def bevorstehend(Name=None):
 
-    auffuehrungen = query_db("SELECT * FROM Aufführung_von WHERE Datum > DATE('now')")
-    if auffuehrungen:
-        return render_template('bevorstehend.html', auffuehrungen = auffuehrungen)
+    if Name is None:
+        auffuehrungen = query_db("SELECT * FROM Aufführung_von WHERE Datum > DATE('now')")
+        if auffuehrungen:
+            return render_template('bevorstehend.html', auffuehrungen = auffuehrungen)
+        else:
+            msg = 'No Articles Found'
+            return render_template('bevorstehend.html', msg=msg)
     else:
-        msg = 'No Articles Found'
-        return render_template('bevorstehend.html', msg=msg)
+        auffuehrungen = query_db("SELECT * FROM Aufführung_von WHERE Name = ? AND Datum > DATE('now')", (Name,))
+        return render_template('bevorstehend.html', auffuehrungen=auffuehrungen)
 
 # User Register
 @app.route('/register', methods=['GET', 'POST'])
@@ -133,31 +139,64 @@ def is_logged_in(f):
     return wrap
 
 @app.route('/buchung', methods=['GET', 'POST'])
+@app.route('/buchung/<string:Datum>', methods=['GET', 'POST'])
 @is_logged_in
-def buchung():
+def buchung(Datum=None):
+
     form = ReservierungsFormular(request.form)
-    if request.method == 'POST' and form.validate():
-        name = request.form['name']
-        datum = request.form['datum']
-        uhrzeit = request.form['uhrzeit']
-        soznr = session['soznr']
-        resnr = random.randint(10000,99999)
-        sitzplatz = "A" + str(random.randint(1,100))
 
+    if Datum is None:
+        if request.method == 'POST' and form.validate():
+            name = request.form['name']
+            datum = request.form['datum']
+            uhrzeit = request.form['uhrzeit']
+            soznr = session['soznr']
+            resnr = random.randint(10000,99999)
+            sitzplatz = "A" + str(random.randint(1,100))
 
-        result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
-        if result:
-            try:
-                #insert_db("INSERT INTO Aufführung_von(Datum, Uhrzeit, Name) VALUES (?,?,?)", (datum, uhrzeit, name))
-                insert_db("INSERT INTO reservieren(SozNr, Reservierungsnummer, Datum, Uhrzeit, Sitzplatz) VALUES (?,?,?,?,?)", (soznr, resnr, datum, uhrzeit, sitzplatz))
-                flash('Buchung erfolgreich!')
-            except:
-                flash('Fehler bei der Buchung! Datum & Uhrzeit richtig?')
+            result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
+            if result:
+                try:
+                    insert_db("INSERT INTO reservieren(SozNr, Reservierungsnummer, Datum, Uhrzeit, Sitzplatz) VALUES (?,?,?,?,?)", (soznr, resnr, datum, uhrzeit, sitzplatz))
+                    flash('Buchung erfolgreich!')
+                except:
+                    flash('Fehler bei der Buchung! Datum & Uhrzeit richtig?')
+                    return redirect(url_for('buchung'))
+            else:
+                flash('Aufführung existiert nicht! Bitte richtiges Datum & Uhrzeit wählen.')
                 return redirect(url_for('buchung'))
-        else:
-            flash('Aufführung existiert nicht! Bitte richtiges Datum & Uhrzeit wählen.')
-            return redirect(url_for('buchung'))
-    return render_template('buchung.html', form=form)
+        return render_template('buchung.html', form=form)
+    else:
+        # Buchung ausfüllen
+        try:
+            auffuehrung = query_db("SELECT * FROM Aufführung_von WHERE Datum = ?", (Datum,), one=True)
+        except:
+            flash('query error')
+        form.name.data = auffuehrung['Name']
+        form.datum.data = datetime.strptime(auffuehrung['Datum'], '%Y-%m-%d')
+        form.uhrzeit.data = datetime.strptime(auffuehrung['Uhrzeit'], '%H:%M')
+
+        if request.method == 'POST' and form.validate():
+            name = request.form['name']
+            datum = request.form['datum']
+            uhrzeit = request.form['uhrzeit']
+            soznr = session['soznr']
+            resnr = random.randint(10000,99999)
+            sitzplatz = "A" + str(random.randint(1,100))
+
+
+            result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
+            if result:
+                try:
+                    insert_db("INSERT INTO reservieren(SozNr, Reservierungsnummer, Datum, Uhrzeit, Sitzplatz) VALUES (?,?,?,?,?)", (soznr, resnr, datum, uhrzeit, sitzplatz))
+                    flash('Buchung erfolgreich!')
+                except:
+                    flash('Fehler bei der Buchung! Datum & Uhrzeit richtig?')
+                    return redirect(url_for('buchung'))
+            else:
+                flash('Aufführung existiert nicht! Bitte richtiges Datum & Uhrzeit wählen.')
+                return redirect(url_for('buchung'))
+        return render_template('buchung.html', form=form)
 
 @app.route('/buchungen')
 @is_logged_in
@@ -170,6 +209,51 @@ def buchungen():
     else:
         msg = 'Sie haben keine Buchungen'
         return render_template('buchungen.html', msg=msg)
+
+# Buchung bearbeiten
+@app.route('/edit_buchung/<string:Reservierungsnummer>', methods=['GET', 'POST'])
+@is_logged_in
+def edit_buchung(Reservierungsnummer):
+
+    # Buchung per Resnr. bekommen
+    buchung = query_db("SELECT * FROM reservieren r JOIN Aufführung_von a ON r.Datum = a.Datum AND r.Uhrzeit = a.Uhrzeit WHERE Reservierungsnummer = ?", (Reservierungsnummer,), one=True)
+
+    form = ReservierungsFormular(request.form)
+
+    # Felder vorbelegen mit alten Daten
+    form.name.data = buchung['Name']
+    form.datum.data = datetime.strptime(buchung['Datum'], '%Y-%m-%d')
+    form.uhrzeit.data = datetime.strptime(buchung['Uhrzeit'], '%H:%M')
+    form.sitzplatz.data = buchung['Sitzplatz']
+
+    if request.method == 'POST' and form.validate():
+        name = request.form['name']
+        datum = request.form['datum']
+        uhrzeit = request.form['uhrzeit']
+        sitzplatz = request.form['sitzplatz']
+
+        result = query_db("SELECT * FROM Aufführung_von WHERE (Datum, Uhrzeit, Name) = (?,?,?) AND Datum > DATE('now') ",(datum,uhrzeit,name))
+        if result:
+            insert_db("UPDATE reservieren SET Datum = ?, Uhrzeit = ?, Sitzplatz = ? WHERE Reservierungsnummer = ?", (datum, uhrzeit, sitzplatz, Reservierungsnummer))
+            flash('Buchung geändert', 'success')
+            return redirect(url_for('buchungen'))
+        else:
+            flash('Aufführung existiert nicht! Bitte Eingaben überprüfen.')
+            return redirect(url_for('edit_buchung', Reservierungsnummer = Reservierungsnummer))
+
+    return render_template('edit_buchung.html', form=form)
+
+# Delete Article
+@app.route('/delete_buchung/<string:Reservierungsnummer>', methods=['POST'])
+@is_logged_in
+def delete_buchung(Reservierungsnummer):
+
+    # Löschen
+    insert_db("DELETE FROM reservieren WHERE Reservierungsnummer = ?", (Reservierungsnummer,))
+
+    flash('Reservierung gelöscht', 'success')
+
+    return redirect(url_for('buchungen'))
 
 # Logout
 @app.route('/logout')
