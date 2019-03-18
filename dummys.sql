@@ -157,8 +157,22 @@ INSERT INTO Aufführung_von VALUES ("2020-04-26", "21:00", "Christoph von Dohná
 INSERT INTO Aufführung_von VALUES ("2010-12-26", "19:00", "Christoph von Dohnányi", 20000, "Aida"); 
 INSERT INTO Aufführung_von VALUES ("2021-06-26", "19:00", "Christoph von Dohnányi", 20000, "Aida"); 
 INSERT INTO Aufführung_von VALUES ("2020-01-26", "19:00", "Christoph von Dohnányi", 20000, "Aida"); 
-
-
+INSERT INTO Aufführung_von VALUES ("2019-03-02", "19:00", "Marco Armiliato", 30000, "Tosca"); 
+INSERT INTO Aufführung_von VALUES ("2019-04-10", "19:00", "Marco Armiliato", 30000, "Tosca"); 
+INSERT INTO Aufführung_von VALUES ("2019-06-12", "19:00", "Marco Armiliato", 30000, "Tosca"); 
+INSERT INTO Aufführung_von VALUES ("2019-07-22", "18:30", "Marco Armiliato", 30000, "Tosca"); 
+INSERT INTO Aufführung_von VALUES ("2019-09-20", "19:00", "Marco Armiliato", 30000, "Tosca"); 
+INSERT INTO Aufführung_von VALUES ("2019-06-21", "17:00", "Mariss Jansons", 22000, "Pique Dame"); 
+INSERT INTO Aufführung_von VALUES ("2019-08-24", "18:30", "Mariss Jansons", 22000, "Pique Dame"); 
+INSERT INTO Aufführung_von VALUES ("2019-10-12", "19:00", "Mariss Jansons", 22000, "Pique Dame"); 
+INSERT INTO Aufführung_von VALUES ("2019-12-18", "19:30", "Mariss Jansons", 22000, "Pique Dame"); 
+INSERT INTO Aufführung_von VALUES ("2019-12-20", "19:00", "Mariss Jansons", 22000, "Pique Dame"); 
+INSERT INTO Aufführung_von VALUES ("2020-01-13", "19:30", "Mariss Jansons", 22000, "Pique Dame"); 
+INSERT INTO Aufführung_von VALUES ("2020-02-14", "17:30", "Jean-Christophe Spinosi", 18000, "Carmen"); 
+INSERT INTO Aufführung_von VALUES ("2020-03-01", "19:00", "Jean-Christophe Spinosi", 18000, "Carmen"); 
+INSERT INTO Aufführung_von VALUES ("2020-04-25", "18:30", "Jean-Christophe Spinosi", 18000, "Carmen"); 
+INSERT INTO Aufführung_von VALUES ("2020-06-17", "18:30", "Jean-Christophe Spinosi", 18000, "Carmen"); 
+INSERT INTO Aufführung_von VALUES ("2020-08-10", "19:30", "Jean-Christophe Spinosi", 18000, "Carmen"); 
 SELECT * FROM Aufführung_von;
 
 INSERT INTO reservieren VALUES (7609010257, 49438, "2019-02-11", "21:00", "A123"); 
