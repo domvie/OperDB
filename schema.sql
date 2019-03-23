@@ -134,9 +134,9 @@ CREATE TABLE singen
     SozNr NUMBER(10),
     Datum DATE,
     Uhrzeit TIME,
-    CONSTRAINT pk_singen PRIMARY KEY (SozNr),
+    CONSTRAINT pk_singen PRIMARY KEY (SozNr, Datum, Uhrzeit),
     CONSTRAINT fk_singen_Sänger FOREIGN KEY (SozNr) REFERENCES Sänger (SozNr) ON DELETE CASCADE,
-    CONSTRAINT fk_singen_Aufführung_von FOREIGN KEY (Datum, Uhrzeit) REFERENCES Aufführung_von ON DELETE CASCADE
+    CONSTRAINT fk_singen_Aufführung_von FOREIGN KEY (Datum, Uhrzeit) REFERENCES Aufführung_von (Datum, Uhrzeit) ON DELETE CASCADE
 );
 
 
@@ -160,7 +160,7 @@ CREATE TABLE kann
     SozNr NUMBER(10),
     Name VARCHAR2(50), 
     Sprache VARCHAR2(20),
-    CONSTRAINT pk_kann PRIMARY KEY (SozNr),
+    CONSTRAINT pk_kann PRIMARY KEY (SozNr, Name, Sprache),
     CONSTRAINT fk_kann_Oper_gehört_R FOREIGN KEY (Name) REFERENCES Oper_gehört_Rollenbuchtypen (Name),
     CONSTRAINT fk_kann_Sänger FOREIGN KEY (SozNr) REFERENCES Sänger (SozNr),
     CONSTRAINT fk_kann_Sprache FOREIGN KEY (Sprache) REFERENCES Sprache (Sprache)
@@ -170,7 +170,7 @@ CREATE TABLE Requisiteur
 (
     SozNr NUMBER(10),
     CONSTRAINT pk_Requisiteur PRIMARY KEY (SozNr),
-    CONSTRAINT fk_Requisiteur_A_hat_Gkonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto ON DELETE CASCADE
+    CONSTRAINT fk_Requisiteur_A_hat_Gkonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr) ON DELETE CASCADE
 );
 
 CREATE TABLE Rollenbücher_haben
@@ -191,7 +191,7 @@ CREATE TABLE Rollenbücher_entlehnen
     Inventarnr VARCHAR2(25)
         CONSTRAINT unq_Rb_entl_Inventarnr UNIQUE,
     CONSTRAINT pk_Rb_entlehnen PRIMARY KEY (SozNr),
-    CONSTRAINT fk_Rb_entl_Rb_haben FOREIGN KEY (Inventarnr) REFERENCES Rollenbücher_haben,
+    CONSTRAINT fk_Rb_entl_Rb_haben FOREIGN KEY (Inventarnr) REFERENCES Rollenbücher_haben (Inventarnr),
     CONSTRAINT fk_Rb_entl_A_hat_Gkonto FOREIGN KEY (SozNr) REFERENCES Angestellte_hat_Gehaltskonto (SozNr)
 );
 
